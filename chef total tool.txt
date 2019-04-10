@@ -1,0 +1,156 @@
+chef install
+================
+#sudo su
+#yum update -y
+#wget  https://packages.chef.io/files/stable/chef-workstation/0.2.48/el/7/chef-workstation-0.2.48-1.el6.x86_64.rpm
+ls
+yum install chef dk........
+chef --version
+
+cookbooks & cookbook
+==============================
+mkdir cookbooks
+cd cookbooks
+chef generate cookbook test-cookbook
+ls
+yum install tree
+tree
+
+recipe(1st recipe)
+======================
+cd test-cookbook
+chef generate recipe test-recipe
+tree
+vi recipes/test-recipe.rb
+--
+file '/myfile' do
+  content 'hello dear student!!'
+  action :create
+end
+--
+chef exec ruby -c recipes/test-recipe.rb
+cd ..
+chef-client -zr "recipe[test-cookbook::test-recipe.rb]"
+ls /
+
+2nd recipe
+===============
+cd test-cookbook/
+chef generate recipe demo-recipe
+tree
+vi recipes/demo-recipe.rb
+---
+package 'tree' do
+  action:install
+end
+file '/myfile2' do
+  content 'this is my second file'
+  action :create
+  owner'root'
+  group'root'
+end
+-----
+chef exec ruby -c recipes/test-recipe.rb
+cd ..
+chef-client -zr "recipe[test-cookbook::test-recipe.rb]"
+ls /
+
+
+Deploying Apache webserver
+================================
+ #chef generate cookbook apachecookbook
+ #cd apache-cookbook
+ #chef generate recipe apache-recipe
+ #vi recipes/apache-recipe.rb
+---------
+package 'httpd' do
+  action :install
+end
+
+file '/var/www/html/index.html' do
+  content 'hello gyus!!'
+end
+
+service 'httpd' do
+  action [ :enable, :start ]
+end
+---------------
+ #chef exec ruby -c recipes/apacherecipe.rb
+ #cd ..
+ #chef-client -zr "recipe[apachecookbook::apacherecipe]"
+
+
+OHAI
+===========
+  #ohai ipaddress
+  #ohai hostname
+  #ohai memory/total
+  #ohai cpu/0/mhz
+
+ATTRIBUTE
+=====================
+  #cd test-cookbook/
+  #vi recipes/test-recipe.rb
+-------------
+  file '/rajafile' do
+    content "getting attribute
+    HOSTNAME :#{node['hostname']}
+    IPADDRESS :#{node['ipaddress']}
+    CPU :#{node['cpu']['0']['mhz']}
+    MEMORY :#{node['memory']['total']}"
+    owner 'root'
+    group 'root'
+    action:create
+ end
+--------------------------
+  #cd ..
+  #chef-client -zr "recipe[testcookbook::testrecipe]"
+
+RUN LIST(Multiple recipes from multiple cookbook at a time)
+=================================================================
+#yum remove httpd -y     (bcz in cookbook httpd already installed and we are going to run the same command again )
+#cd test-cookbook/
+#tree
+#vi recipes/test-recipe.rb (no change)
+#cd ..
+# chef-client -zr "recipe[apache-cookbook::apache-recipe],recipe[test-cookbok::test-recipe]"
+
+
+INCLUDE RECIPE (call recipe from other recipe with same cookbook)
+==================================================================
+yum remove httpd -y
+chef generate recipe hello-recipe
+vi recipes/hello-recipe.rb
+--------
+file '/rajafile' do
+  content "i am raja"
+  action :create
+end
+-----------------------
+#vi recipes/default.rb
+---------
+include_recipe "apache-cookbook::apache-recipe"
+include_recipe "apache-cookbook::hello-recipe"
+cd ..
+chef-client -zr "recipe[apache-cookbook::default]"
+
+
+run multiple recipes from same cookbook
+============================================
+ apache-cookbook]#yum remove httpd -y
+ tree
+ cd testcookbook/
+ tree
+ vi recipes/demorecipe.rb
+ vi recipes/testrecipe.rb
+ ls /
+ vi recipes/defaultrecipe.rb
+ vi recipes/default.rb
+-----------------------
+include_recipe "test-cookbook::demo-recipe"
+include_recipe "test-cookbook::test-recipe"
+-------------------------------------
+ cd ..
+ chef-client -zr "recipe[apachecookbook::default],recipe[testcookbook::default]"
+
+
